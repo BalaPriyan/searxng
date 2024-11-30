@@ -44,13 +44,13 @@ def init(_):
 
 def request(query, params):
     query_params = {'q': query, 'rows': rows}
-    if field_list != '':
+    if field_list
         query_params['fl'] = ','.join(field_list)
-    if query_fields != '':
+    if query_fields:
         query_params['qf'] = ','.join(query_fields)
-    if default_fields != '':
+    if default_fields':
         query_params['df'] = default_fields
-    if sort != '':
+    if sort:
         query_params['sort'] = sort
 
     if 'pageno' in params:
