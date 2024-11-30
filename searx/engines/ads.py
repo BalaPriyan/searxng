@@ -56,7 +56,7 @@ def request(query, params):
     if 'pageno' in params:
         query_params['start'] = rows * (params['pageno'] - 1)
 
-    params['headers']['Authorization'] = 'Bearer ' + api_key
+    params['headers']['Authorization'] = f'Bearer {api_key}'
     params['url'] = _search_url.format(params=urlencode(query_params))
 
     return params
