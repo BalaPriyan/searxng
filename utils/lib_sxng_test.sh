@@ -16,6 +16,10 @@ test.:
 EOF
 }
 
+if [ "$VERBOSE" = "1" ]; then
+    TEST_NOSE2_VERBOSE="-vvv"
+fi
+
 test.yamllint() {
     build_msg TEST "[yamllint] \$YAMLLINT_FILES"
     pyenv.cmd yamllint --strict --format parsable "${YAMLLINT_FILES[@]}"
@@ -23,17 +27,18 @@ test.yamllint() {
 }
 
 test.pylint() {
-    # shellcheck disable=SC2086
     (   set -e
         pyenv.activate
         PYLINT_OPTIONS="--rcfile .pylintrc"
 
         build_msg TEST "[pylint] ./searx/engines"
+	# shellcheck disable=SC2086
         pylint ${PYLINT_OPTIONS} ${PYLINT_VERBOSE} \
             --additional-builtins="traits,supported_languages,language_aliases,logger,categories" \
             searx/engines
 
         build_msg TEST "[pylint] ./searx ./searxng_extra ./tests"
+	# shellcheck disable=SC2086
         pylint ${PYLINT_OPTIONS} ${PYLINT_VERBOSE} \
 	    --ignore=searx/engines \
 	    searx searx/searxng.msg \
@@ -45,18 +50,39 @@ test.pylint() {
 
 test.pyright() {
     build_msg TEST "[pyright] static type check of python sources"
+    build_msg TEST "    --> typeCheckingMode: off !!!"
+    build_msg TEST "[pyright] suppress warnings related to intentional monkey patching"
     node.env.dev
     # We run Pyright in the virtual environment because Pyright
     # executes "python" to determine the Python version.
-    build_msg TEST "[pyright] suppress warnings related to intentional monkey patching"
     pyenv.cmd npx --no-install pyright -p pyrightconfig-ci.json \
-        | grep -v ".py$" \
+        | grep -E '\.py:[0-9]+:[0-9]+'\
         | grep -v '/engines/.*.py.* - warning: "logger" is not defined'\
         | grep -v '/plugins/.*.py.* - error: "logger" is not defined'\
         | grep -v '/engines/.*.py.* - warning: "supported_languages" is not defined' \
         | grep -v '/engines/.*.py.* - warning: "language_aliases" is not defined' \
         | grep -v '/engines/.*.py.* - warning: "categories" is not defined'
-    dump_return $?
+    # shellcheck disable=SC2086
+    dump_return ${PIPESTATUS[0]}
+}
+
+test.types() {
+    build_msg TEST "[pyright/types] static type check of python sources"
+    build_msg TEST "    --> typeCheckingMode: on"
+    build_msg TEST "[pyright/types] suppress warnings related to intentional monkey patching"
+    node.env.dev
+    # We run Pyright in the virtual environment because Pyright
+    # executes "python" to determine the Python version.
+    pyenv.cmd npx --no-install pyright -p pyrightconfig.json \
+        | grep -E '\.py:[0-9]+:[0-9]+'\
+        | grep -v '/engines/.*.py.* - warning: "logger" is not defined'\
+        | grep -v '/plugins/.*.py.* - error: "logger" is not defined'\
+        | grep -v '/engines/.*.py.* - warning: "supported_languages" is not defined' \
+        | grep -v '/engines/.*.py.* - warning: "language_aliases" is not defined' \
+        | grep -v '/engines/.*.py.* - warning: "categories" is not defined'
+    # ignore exit value from pyright
+    # dump_return ${PIPESTATUS[0]}
+    return 0
 }
 
 test.black() {
@@ -67,7 +93,8 @@ test.black() {
 
 test.unit() {
     build_msg TEST 'tests/unit'
-    pyenv.cmd python -m nose2 -s tests/unit
+    # shellcheck disable=SC2086
+    pyenv.cmd python -m nose2 ${TEST_NOSE2_VERBOSE} -s tests/unit
     dump_return $?
 }
 
@@ -75,7 +102,8 @@ test.coverage() {
     build_msg TEST 'unit test coverage'
     (   set -e
         pyenv.activate
-        python -m nose2 -C --log-capture --with-coverage --coverage searx -s tests/unit
+	# shellcheck disable=SC2086
+        python -m nose2 ${TEST_NOSE2_VERBOSE} -C --log-capture --with-coverage --coverage searx -s tests/unit
         coverage report
         coverage html
     )
