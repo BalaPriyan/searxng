@@ -83,7 +83,7 @@ def response(resp):
         results.append(
             {
                 'url': result_base_url + res.get("bibcode") + "/",
-                'title': "Stirb: " + res.get("title")[0],
+                'title': res.get("title")[0],
                 'author': author,
                 'content': res.get("abstract"),
                 'doi': res.get("doi"),
