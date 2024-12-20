@@ -38,9 +38,6 @@ def init(_):
     if api_key == 'unset':
         raise SearxEngineAPIException('missing ADS API key')
 
-    global _search_url
-    _search_url = base_url + '/query?{params}'
-
 
 def request(query, params):
     query_params = {'q': query, 'rows': rows}
