@@ -73,22 +73,24 @@ def response(resp):
     resp_json = resp_json["response"]
     result_len = resp_json["numFound"]
     results = []
-    
+
     for res in resp_json["docs"]:
         author = res.get("author")
-        
+
         if author:
             author = author[0] + ' et al.'
-            
-        results.append({
-            'url': result_base_url + res.get("bibcode") + "/",
-            'title': "Stirb: " + res.get("title")[0],
-            'author': author,
-            'content': res.get("abstract"),
-            'doi': res.get("doi"),
-            'publishedDate': datetime.fromisoformat(res.get("date")),
-        })
-        
+
+        results.append(
+            {
+                'url': result_base_url + res.get("bibcode") + "/",
+                'title': "Stirb: " + res.get("title")[0],
+                'author': author,
+                'content': res.get("abstract"),
+                'doi': res.get("doi"),
+                'publishedDate': datetime.fromisoformat(res.get("date")),
+            }
+        )
+
     results.append({'number_of_results': result_len})
 
     return results
