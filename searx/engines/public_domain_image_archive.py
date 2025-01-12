@@ -48,29 +48,37 @@ def clean_url(url):
 def request(query, params):
     params['url'] = search_url
     params["method"] = "POST"
-    params["data"] = (
-        """{"requests":[{"indexName":"prod_all-images","params":"highlightPostTag=__%2Fais-highlight__&highlightPreTag=__ais-highlight__&"""
-    )
-    params["data"] += f'page={params["pageno"] - 1}&query={query}' + '"}]}'
+    params = {
+        "page": params["pageno"] - 1,
+        "query": query,
+        "highlightPostTag":  "__ais-highlight__",
+        "highlightPreTag": "__ais-highlight__",
+    }
+    data = {
+        "requests": [
+            {"indexName": "prod_all-images", "params": urlencode(params),
+        ]
+    }
+    params["data"] = dumps(data)
     logger.debug("query_url --> %s", params['url'])
     return params
 
 
 def response(resp):
     results = []
-    json_data = loads(resp.text)
+    json_data = resp.json()
 
-    if 'results' in json_data:
+    if 'results' not in json_data:
+        return []
         for result in json_data['results'][0]['hits']:
-            content = ""
+            content = []
             if "themes" in result:
-                content += "Themes: " + result['themes']
+                content.append("Themes: " + result['themes'])
             if "encompassingWork" in result:
-                if content != "":
-                    content += "\n"
-                content += "Encompassing work: " + result['encompassingWork']
+                content.append("Encompassing work: " + result['encompassingWork'])
+            content = "\n".join(content)
 
-            base_image_url = result['thumbnail'].split("?")[0] if "?" in result['thumbnail'] else result['thumbnail']
+            base_image_url = result['thumbnail'].split("?")[0]
             
             results.append(
                 {
@@ -78,8 +86,8 @@ def response(resp):
                     'url': clean_url(f"{about['website']}/images/{result['objectID']}"),
                     'img_src': clean_url(base_image_url),
                     'thumbnail_src': clean_url(base_image_url + THUMBNAIL_SUFFIX),
-                    'title': f"{result['title'].strip()} by {result['artist']} {result.get('displayYear') or ''}",
-                    'content': f"Themes: {result['themes']}",
+                    'title': f"{result['title'].strip()} by {result['artist']} {result.get('displayYear', '')}",
+                    'content': content,
                 }
             )
 
