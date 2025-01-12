@@ -6,6 +6,20 @@
 from urllib.parse import urlencode, urlparse, urlunparse, parse_qsl
 from json import loads
 
+THUMBNAIL_SUFFIX = "?fit=max&h=360&w=360"
+"""
+Example thumbnail urls (from requests & html):
+- https://the-public-domain-review.imgix.net/shop/nov-2023-prints-00043.jpg?fit=max&h=360&w=360
+- https://the-public-domain-review.imgix.net/collections/the-history-of-four-footed-beasts-and-serpents-1658/8616383182_5740fa7851_o.jpg?fit=max&h=360&w=360
+
+Example full image urls (from html)
+- https://the-public-domain-review.imgix.net/shop/nov-2023-prints-00043.jpg?fit=clip&w=970&h=800&auto=format,compress
+- https://the-public-domain-review.imgix.net/collections/the-history-of-four-footed-beasts-and-serpents-1658/8616383182_5740fa7851_o.jpg?fit=clip&w=310&h=800&auto=format,compress
+
+The thumbnail url from the request will be cleaned for the full image link
+The cleaned thumbnail url will have THUMBNAIL_SUFFIX added to them, based on the original thumbnail parameters
+"""
+
 # about
 about = {
     "website": 'https://pdimagearchive.org',
@@ -35,7 +49,7 @@ def request(query, params):
     params['url'] = search_url
     params["method"] = "POST"
     params["data"] = (
-        """{"requests":[{"indexName":"prod_all-images","params":"highlightPostTag=__%2Fais-highlight__&highlightPreTag=__ais-highlight__"""
+        """{"requests":[{"indexName":"prod_all-images","params":"highlightPostTag=__%2Fais-highlight__&highlightPreTag=__ais-highlight__&"""
     )
     params["data"] += f'page={params["pageno"] - 1}&query={query}' + '"}]}'
     logger.debug("query_url --> %s", params['url'])
@@ -56,12 +70,14 @@ def response(resp):
                     content += "\n"
                 content += "Encompassing work: " + result['encompassingWork']
 
+            base_image_url = result['thumbnail'].split("?")[0] if "?" in result['thumbnail'] else result['thumbnail']
+            
             results.append(
                 {
                     'template': 'images.html',
                     'url': clean_url(f"{about['website']}/images/{result['objectID']}"),
-                    'thumbnail_src': clean_url(result['thumbnail']),
-                    'img_src': 'None',  # clean_url(result['urls']['raw']),
+                    'img_src': clean_url(base_image_url),
+                    'thumbnail_src': clean_url(base_image_url + THUMBNAIL_SUFFIX),
                     'title': f"{result['title'].strip()} by {result['artist']} {result.get('displayYear') or ''}",
                     'content': f"Themes: {result['themes']}",
                 }
