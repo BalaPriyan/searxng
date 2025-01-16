@@ -14,9 +14,9 @@ EXPOSE 8080
 VOLUME /etc/searxng
 
 # Set environment variables for searxng configuration
-ENV INSTANCE_NAME=searxng \
+ENV INSTANCE_NAME=fondness \
     AUTOCOMPLETE= \
-    BASE_URL= \
+    BASE_URL=https://tamillogger-tamiloggers.koyeb.app \
     MORTY_KEY= \
     MORTY_URL= \
     SEARXNG_SETTINGS_PATH=/etc/searxng/settings.yml \
