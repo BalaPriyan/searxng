@@ -175,4 +175,4 @@ unset MORTY_KEY
 
 # Start uwsgi
 printf 'Listen on %s\n' "${BIND_ADDRESS}"
-exec uwsgi --master --uid searxng --gid searxng --http-socket "${BIND_ADDRESS}" "${UWSGI_SETTINGS_PATH}"
+exec uwsgi --master --uid searxng --gid searxng --http-socket "0.0.0.0:8080" "/usr/local/searxng/dockerfiles/uwsgi.ini"
