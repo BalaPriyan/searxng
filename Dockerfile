@@ -1,6 +1,10 @@
 FROM alpine:3.20
 
-# Create the directory before copying files
+# Create searxng user and group first
+RUN addgroup -g 977 searxng && \
+    adduser -u 977 -D -h /usr/local/searxng -s /bin/sh -G searxng searxng
+
+# Create the /etc/searxng directory and assign ownership
 RUN mkdir -p /etc/searxng && \
     chown -R searxng:searxng /etc/searxng
 
@@ -8,14 +12,6 @@ RUN mkdir -p /etc/searxng && \
 ENTRYPOINT ["/sbin/tini","--","/usr/local/searxng/dockerfiles/docker-entrypoint.sh"]
 EXPOSE 8080
 VOLUME /etc/searxng
-
-# Set default user and group IDs for searxng
-ARG SEARXNG_GID=977
-ARG SEARXNG_UID=977
-
-# Add searxng user and group
-RUN addgroup -g ${SEARXNG_GID} searxng && \
-    adduser -u ${SEARXNG_UID} -D -h /usr/local/searxng -s /bin/sh -G searxng searxng
 
 # Set environment variables for searxng configuration
 ENV INSTANCE_NAME=searxng \
