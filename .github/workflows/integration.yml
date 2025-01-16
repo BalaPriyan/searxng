@@ -117,7 +117,7 @@ jobs:
   babel:
     name: Update translations branch
     runs-on: ubuntu-20.04
-    if: ${{ github.repository_owner == 'searxng' && github.ref == 'refs/heads/master' }}
+    if: ${{ github.repository_owner == 'BalaPriyan' && github.ref == 'refs/heads/master' }}
     needs:
       - python
       - themes
@@ -150,8 +150,8 @@ jobs:
         run: |
           mkdir -p ~/.config
           echo "${WEBLATE_CONFIG}" > ~/.config/weblate
-          git config --global user.email "searxng-bot@users.noreply.github.com"
-          git config --global user.name "searxng-bot"
+          git config --global user.email "Balapriyanbalusamy@gmail.com.github.com"
+          git config --global user.name "BalaPriyan"
       - name: Update transations
         id: update
         run: |
