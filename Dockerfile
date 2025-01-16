@@ -1,28 +1,40 @@
 FROM alpine:3.20
+
+# Create the directory before copying files
+RUN mkdir -p /etc/searxng && \
+    chown -R searxng:searxng /etc/searxng
+
+# Set entrypoint and expose port
 ENTRYPOINT ["/sbin/tini","--","/usr/local/searxng/dockerfiles/docker-entrypoint.sh"]
 EXPOSE 8080
 VOLUME /etc/searxng
 
+# Set default user and group IDs for searxng
 ARG SEARXNG_GID=977
 ARG SEARXNG_UID=977
 
+# Add searxng user and group
 RUN addgroup -g ${SEARXNG_GID} searxng && \
     adduser -u ${SEARXNG_UID} -D -h /usr/local/searxng -s /bin/sh -G searxng searxng
 
+# Set environment variables for searxng configuration
 ENV INSTANCE_NAME=searxng \
     AUTOCOMPLETE= \
     BASE_URL= \
     MORTY_KEY= \
     MORTY_URL= \
-    SEARXNG_SETTINGS_PATH=/searxng/settings.yml \
-    UWSGI_SETTINGS_PATH=/dockerfiles/uwsgi.ini \
+    SEARXNG_SETTINGS_PATH=/etc/searxng/settings.yml \
+    UWSGI_SETTINGS_PATH=/etc/searxng/uwsgi.ini \
     UWSGI_WORKERS=%k \
     UWSGI_THREADS=4
 
+# Set working directory
 WORKDIR /usr/local/searxng
 
+# Copy requirements.txt
 COPY requirements.txt ./requirements.txt
 
+# Install dependencies
 RUN apk add --no-cache -t build-dependencies \
     build-base \
     py3-setuptools \
@@ -48,9 +60,15 @@ RUN apk add --no-cache -t build-dependencies \
  && apk del build-dependencies \
  && rm -rf /root/.cache
 
+# Copy the Docker files and source code
 COPY --chown=searxng:searxng dockerfiles ./dockerfiles
 COPY --chown=searxng:searxng searx ./searx
 
+# Create /etc/searxng/ and copy necessary files
+COPY --chown=searxng:searxng dockerfiles/uwsgi.ini /etc/searxng/uwsgi.ini
+COPY --chown=searxng:searxng searx/settings.yml /etc/searxng/settings.yml
+
+# Set timestamps for files to avoid rebuilds and prevent stale cache
 ARG TIMESTAMP_SETTINGS=0
 ARG TIMESTAMP_UWSGI=0
 ARG VERSION_GITCOMMIT=unknown
@@ -62,7 +80,7 @@ RUN su searxng -c "/usr/bin/python3 -m compileall -q searx" \
     -o -name '*.svg' -o -name '*.ttf' -o -name '*.eot' \) \
     -type f -exec gzip -9 -k {} \+ -exec brotli --best {} \+
 
-# Keep these arguments at the end to prevent redundant layer rebuilds
+# Add metadata labels for the image
 ARG LABEL_DATE=
 ARG GIT_URL=unknown
 ARG SEARXNG_GIT_VERSION=unknown
@@ -87,3 +105,4 @@ LABEL maintainer="Fondness https://github.com/BalaPriyan" \
       org.opencontainers.image.source=${LABEL_VCS_URL} \
       org.opencontainers.image.created="${LABEL_DATE}" \
       org.opencontainers.image.documentation="https://github.com/searxng/searxng-docker"
+
