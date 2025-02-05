@@ -16,7 +16,7 @@ VOLUME /etc/searxng
 # Set environment variables for searxng configuration
 ENV INSTANCE_NAME=fondness \
     AUTOCOMPLETE= \
-    BASE_URL=https://tamillogger-tamiloggers.koyeb.app \
+    BASE_URL=https://fondness.koyeb.app \
     MORTY_KEY= \
     MORTY_URL= \
     SEARXNG_SETTINGS_PATH=/etc/searxng/settings.yml \
